@@ -1,0 +1,50 @@
+# ---- Python cache and bytecode ----
+__pycache__/
+*.py[cod]
+*$py.class
+
+# ---- Virtual environments ----
+venv/
+.venv/
+env/
+ENV/
+
+# ---- Build / packaging ----
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# ---- Tool caches ----
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.pyre/
+.hypothesis/
+.coverage
+.coverage.*
+htmlcov/
+
+# ---- Jupyter ----
+.ipynb_checkpoints/
+
+# ---- Environment / secrets ----
+.env
+.env.*
+*.env
+
+# ---- IDE / OS ----
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# ---- Project artifacts ----
+outputs/
+
+# ---- Local data artifacts (keep repo clean and avoid large/private corpora) ----
+data/raw/*.txt
+data/processed/*.npz
+
+# ---- Logs ----
+*.log
