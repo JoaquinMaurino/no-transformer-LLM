@@ -1,6 +1,6 @@
 import math
 import time
-import numpy as np
+import backend
 
 from model.lm_mlp import forward, backward
 from model.embeddings import update_mlp_weights
@@ -8,12 +8,12 @@ from model.loss import cross_entropy_loss
 
 
 def train(W_in, W_hidden, b_hidden, W_out, contexts, targets, config):
-    contexts = np.array(contexts, dtype=np.int32)
-    targets = np.array(targets, dtype=np.int32)
-    W_in = np.array(W_in, dtype=np.float32)
-    W_hidden = np.array(W_hidden, dtype=np.float32)
-    b_hidden = np.array(b_hidden, dtype=np.float32)
-    W_out = np.array(W_out, dtype=np.float32)
+    contexts = backend.as_int32(contexts)
+    targets = backend.as_int32(targets)
+    W_in = backend.as_float32(W_in)
+    W_hidden = backend.as_float32(W_hidden)
+    b_hidden = backend.as_float32(b_hidden)
+    W_out = backend.as_float32(W_out)
 
     epochs = int(config.get("epochs", 5))
     batch_size = int(config.get("batch_size", 32))
@@ -29,13 +29,13 @@ def train(W_in, W_hidden, b_hidden, W_out, contexts, targets, config):
     if num_samples == 0:
         raise ValueError("Dataset vacío")
 
-    rng = np.random.default_rng(seed)
+    backend.set_seed(seed)
     history = []
     total_batches = math.ceil(num_samples / batch_size)
 
     for epoch in range(1, epochs + 1):
         start_time = time.time()
-        permutation = rng.permutation(num_samples)
+        permutation = backend.random_permutation(num_samples)
         accumulated_loss = 0.0
 
         for batch_idx in range(total_batches):
@@ -58,7 +58,7 @@ def train(W_in, W_hidden, b_hidden, W_out, contexts, targets, config):
             # Loss computation
             loss = cross_entropy_loss(scores, batch_targets)
 
-            if math.isnan(float(loss)):
+            if backend.contains_nan(loss):
                 raise ValueError("El loss se volvió NaN")
 
             # Backward pass
@@ -86,12 +86,17 @@ def train(W_in, W_hidden, b_hidden, W_out, contexts, targets, config):
                 learning_rate=learning_rate,
             )
 
-            accumulated_loss += float(loss) * (end - start)
+            accumulated_loss += backend.to_float(loss) * (end - start)
 
         avg_loss = accumulated_loss / float(num_samples)
         elapsed = time.time() - start_time
+        gpu_mem = backend.gpu_memory_info_mb()
         
-        print(f"Epoch {epoch}/{epochs} - loss: {avg_loss:.6f} - time: {elapsed:.2f}s")
+        if gpu_mem is None:
+            print(f"Epoch {epoch}/{epochs} - loss: {avg_loss:.6f} - time: {elapsed:.2f}s")
+        else:
+            used_mb, total_mb = gpu_mem
+            print(f"Epoch {epoch}/{epochs} - loss: {avg_loss:.6f} - time: {elapsed:.2f}s - gpu_mem: {used_mb:.1f}/{total_mb:.1f} MB")
             
         history.append(avg_loss)
 
